@@ -16,6 +16,11 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 class User extends Authenticatable implements JWTSubject
 //tes commit
 {
+    protected $fillable = [
+    'name',
+    'email',
+    'password'
+];
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
