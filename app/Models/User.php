@@ -14,6 +14,7 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements JWTSubject
+//tes commit
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
