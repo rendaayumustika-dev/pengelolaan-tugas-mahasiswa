@@ -85,11 +85,14 @@ class AuthController extends Controller
 }
 
     public function refresh()
-    {
-        return response()->json([
-            'message' => 'Refresh token'
-        ]);
-    }
+{
+    return response()->json([
+        'status' => true,
+        'message' => 'Token berhasil diperbarui',
+        'access_token' => auth()->refresh(),
+        'token_type' => 'bearer'
+    ]);
+}
 
     public function logout()
 {
