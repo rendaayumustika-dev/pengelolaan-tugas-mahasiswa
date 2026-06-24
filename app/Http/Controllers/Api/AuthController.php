@@ -76,11 +76,13 @@ class AuthController extends Controller
 }
 
     public function profile()
-    {
-        return response()->json([
-            'message' => 'Profile user'
-        ]);
-    }
+{
+    return response()->json([
+        'status' => true,
+        'message' => 'Data user',
+        'data' => auth()->user()
+    ]);
+}
 
     public function refresh()
     {
