@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
+use App\Models\ActivityLog;
 
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
@@ -45,4 +46,9 @@ class User extends Authenticatable implements JWTSubject
         {
             return [];
         }
+
+        public function activityLogs()
+{
+    return $this->hasMany(ActivityLog::class);
+}
 }
