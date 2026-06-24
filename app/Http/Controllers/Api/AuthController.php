@@ -102,6 +102,11 @@ return response()->json([
 
     public function logout()
 {
+    ActivityLog::create([
+        'user_id' => auth()->id(),
+        'activity' => 'Logout'
+    ]);
+
     auth()->logout();
 
     return response()->json([
