@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
@@ -41,11 +42,38 @@ class AuthController extends Controller
     ], 201);
 }
     public function login(Request $request)
-    {
+{
+    $validator = Validator::make(
+        $request->all(),
+        [
+            'email' => 'required|email',
+            'password' => 'required'
+        ]
+    );
+
+    if ($validator->fails()) {
         return response()->json([
-            'message' => 'Login berhasil'
-        ]);
+            'status' => false,
+            'message' => $validator->errors()
+        ], 400);
     }
+
+    $credentials = $request->only('email', 'password');
+
+    if (!$token = Auth::guard('api')->attempt($credentials)) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Email atau password salah'
+        ], 401);
+    }
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Login berhasil',
+        'access_token' => $token,
+        'token_type' => 'bearer'
+    ]);
+}
 
     public function profile()
     {
