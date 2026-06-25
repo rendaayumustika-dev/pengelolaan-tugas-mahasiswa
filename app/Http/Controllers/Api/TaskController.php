@@ -74,6 +74,10 @@ class TaskController extends Controller
         }
 
         $task->update($validated);
+        ActivityLog::create([
+            'user_id' => auth()->id(),
+            'activity' => 'Update Task'
+        ]);
 
         return response()->json([
             'data' => $task->refresh()->load(['course', 'status', 'priority', 'submission']),
@@ -126,6 +130,20 @@ class TaskController extends Controller
             'data' => $query->orderBy('deadline')->get(),
         ]);
     }
+
+    public function destroy(string $task): JsonResponse
+{
+    ActivityLog::create([
+        'user_id' => auth()->id(),
+        'activity' => 'Delete Task'
+    ]);
+
+    $this->ownedTask($task)->delete();
+
+    return response()->json([
+        'message' => 'Tugas berhasil dihapus.',
+    ]);
+}       
 
     /**
      * @return array<string, array<int, string>>
