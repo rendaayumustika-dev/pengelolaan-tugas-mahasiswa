@@ -7,21 +7,31 @@ use App\Models\Course;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 
 class CourseController extends Controller
 {
     public function index(): JsonResponse
     {
-        $courses = Auth::guard('api')->user()
-            ->courses()
-            ->withCount('tasks')
+        $query = Auth::guard('api')->user()
+            ->courses();
+
+        // Agar endpoint courses tetap jalan meskipun tabel tasks/bagian lain belum ada.
+        if (Schema::hasTable('tasks')) {
+            $query->withCount('tasks');
+        } else {
+            $query->select('courses.*');
+        }
+
+        $courses = $query
             ->orderBy('semester')
             ->orderBy('nama_mk')
             ->get();
 
         return response()->json(['data' => $courses]);
     }
+
 
     public function store(Request $request): JsonResponse
     {
@@ -35,11 +45,34 @@ class CourseController extends Controller
 
     public function show(string $course): JsonResponse
     {
-        $course = $this->ownedCourse($course)
-            ->load(['tasks.status', 'tasks.priority', 'tasks.submission']);
+        $courseModel = $this->ownedCourse($course);
 
-        return response()->json(['data' => $course]);
+        // Relasi ini butuh beberapa tabel turunan.
+        // Agar GET /api/courses/{id} tidak error saat tabel turunan belum ada,
+        // hanya load relasi yang tabelnya memang tersedia.
+        $relations = [];
+
+        if (Schema::hasTable('tasks')) {
+            $relations[] = 'tasks';
+
+            if (Schema::hasTable('statuses')) {
+                $relations[] = 'tasks.status';
+            }
+
+            if (Schema::hasTable('task_priorities')) {
+                $relations[] = 'tasks.priority';
+            }
+
+            if (Schema::hasTable('task_submissions')) {
+                $relations[] = 'tasks.submission';
+            }
+        }
+
+        $courseModel = empty($relations) ? $courseModel : $courseModel->load($relations);
+
+        return response()->json(['data' => $courseModel]);
     }
+
 
     public function update(Request $request, string $course): JsonResponse
     {
