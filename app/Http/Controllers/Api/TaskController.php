@@ -8,6 +8,7 @@ use App\Models\Task;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\ActivityLog;
 
 class TaskController extends Controller
 {
@@ -48,6 +49,10 @@ class TaskController extends Controller
         $validated['priority_id'] ??= 2;
 
         $task = Task::create($validated)->load(['course', 'status', 'priority', 'submission']);
+        ActivityLog::create([
+            'user_id' => auth()->id(),
+            'activity' => 'Create Task'
+        ]);
 
         return response()->json(['data' => $task], 201);
     }
