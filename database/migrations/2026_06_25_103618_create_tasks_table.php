@@ -13,10 +13,12 @@ return new class extends Migration
     {
         Schema::create('tasks', function (Blueprint $table) {
             $table->id();
+
             $table->foreignId('course_id')->constrained('courses')->cascadeOnDelete();
             $table->string('judul_tugas');
             $table->text('deskripsi')->nullable();
             $table->dateTime('deadline');
+            
             $table->foreignId('status_id')->default(1)->constrained('statuses')->restrictOnDelete();
             $table->foreignId('priority_id')->default(2)->constrained('task_priorities')->restrictOnDelete();
             $table->timestamps();
