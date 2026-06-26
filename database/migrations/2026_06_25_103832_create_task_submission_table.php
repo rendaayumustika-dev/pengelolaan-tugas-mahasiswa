@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('task_submissions', function (Blueprint $table) {
             $table->id();
+            
             $table->foreignId('task_id')->unique()->constrained('tasks')->cascadeOnDelete();
             $table->dateTime('tanggal_submit');
             $table->text('catatan')->nullable();
