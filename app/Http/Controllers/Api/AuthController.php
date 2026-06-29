@@ -81,6 +81,11 @@ return response()->json([
 ]);
 }
 
+public function me(Request $request)
+{
+    return response()->json($request->user());
+}
+
     public function profile()
 {
     return response()->json([
