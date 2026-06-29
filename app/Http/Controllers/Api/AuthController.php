@@ -95,6 +95,11 @@ public function me(Request $request)
     ]);
 }
 
+public function me(Request $request)
+{
+    return response()->json($request->user());
+}
+
     public function refresh()
 {
     return response()->json([
