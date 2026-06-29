@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\Course;
 use App\Models\Task;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\ActivityLog;
 
 class TaskController extends Controller
 {
@@ -43,18 +43,22 @@ class TaskController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate($this->rules());
+
         $this->ownedCourse((string) $validated['course_id']);
 
         $validated['status_id'] ??= 1;
         $validated['priority_id'] ??= 2;
 
-        $task = Task::create($validated)->load(['course', 'status', 'priority', 'submission']);
+        $task = Task::create($validated);
+
         ActivityLog::create([
             'user_id' => auth()->id(),
-            'activity' => 'Create Task'
+            'activity' => 'Create Task',
         ]);
 
-        return response()->json(['data' => $task], 201);
+        return response()->json([
+            'data' => $task->load(['course', 'status', 'priority', 'submission']),
+        ], 201);
     }
 
     public function show(string $task): JsonResponse
@@ -67,6 +71,7 @@ class TaskController extends Controller
     public function update(Request $request, string $task): JsonResponse
     {
         $task = $this->ownedTask($task);
+
         $validated = $request->validate($this->rules(true));
 
         if (array_key_exists('course_id', $validated)) {
@@ -74,19 +79,32 @@ class TaskController extends Controller
         }
 
         $task->update($validated);
+
         ActivityLog::create([
             'user_id' => auth()->id(),
-            'activity' => 'Update Task'
+            'activity' => 'Update Task',
         ]);
 
         return response()->json([
-            'data' => $task->refresh()->load(['course', 'status', 'priority', 'submission']),
+            'data' => $task->refresh()->load([
+                'course',
+                'status',
+                'priority',
+                'submission'
+            ]),
         ]);
     }
 
     public function destroy(string $task): JsonResponse
     {
-        $this->ownedTask($task)->delete();
+        $task = $this->ownedTask($task);
+
+        ActivityLog::create([
+            'user_id' => auth()->id(),
+            'activity' => 'Delete Task',
+        ]);
+
+        $task->delete();
 
         return response()->json([
             'message' => 'Tugas berhasil dihapus.',
@@ -100,10 +118,16 @@ class TaskController extends Controller
         ]);
 
         $task = $this->ownedTask($task);
+
         $task->update($validated);
 
         return response()->json([
-            'data' => $task->refresh()->load(['course', 'status', 'priority', 'submission']),
+            'data' => $task->refresh()->load([
+                'course',
+                'status',
+                'priority',
+                'submission'
+            ]),
         ]);
     }
 
@@ -116,13 +140,14 @@ class TaskController extends Controller
         ]);
 
         $query = $this->ownedTaskQuery();
+
         $query->where('deadline', '>=', $filters['from'] ?? now());
 
-        if (! empty($filters['to'])) {
+        if (!empty($filters['to'])) {
             $query->where('deadline', '<=', $filters['to']);
         }
 
-        if (! $request->boolean('include_done')) {
+        if (!$request->boolean('include_done')) {
             $query->where('status_id', '!=', 3);
         }
 
@@ -131,23 +156,6 @@ class TaskController extends Controller
         ]);
     }
 
-    public function destroy(string $task): JsonResponse
-{
-    ActivityLog::create([
-        'user_id' => auth()->id(),
-        'activity' => 'Delete Task'
-    ]);
-
-    $this->ownedTask($task)->delete();
-
-    return response()->json([
-        'message' => 'Tugas berhasil dihapus.',
-    ]);
-}       
-
-    /**
-     * @return array<string, array<int, string>>
-     */
     private function rules(bool $partial = false): array
     {
         $required = $partial ? 'sometimes' : 'required';
@@ -164,7 +172,8 @@ class TaskController extends Controller
 
     private function ownedCourse(string $id): Course
     {
-        return Auth::guard('api')->user()
+        return Auth::guard('api')
+            ->user()
             ->courses()
             ->findOrFail($id);
     }
@@ -177,7 +186,14 @@ class TaskController extends Controller
     private function ownedTaskQuery()
     {
         return Task::query()
-            ->whereHas('course', fn ($query) => $query->where('user_id', Auth::guard('api')->id()))
-            ->with(['course', 'status', 'priority', 'submission']);
+            ->whereHas('course', function ($query) {
+                $query->where('user_id', Auth::guard('api')->id());
+            })
+            ->with([
+                'course',
+                'status',
+                'priority',
+                'submission',
+            ]);
     }
 }
