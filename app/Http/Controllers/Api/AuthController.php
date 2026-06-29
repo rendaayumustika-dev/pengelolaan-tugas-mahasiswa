@@ -81,6 +81,11 @@ return response()->json([
 ]);
 }
 
+public function me(Request $request)
+{
+    return response()->json($request->user());
+}
+
     public function profile()
 {
     return response()->json([
@@ -88,6 +93,11 @@ return response()->json([
         'message' => 'Data user',
         'data' => auth()->user()
     ]);
+}
+
+public function me(Request $request)
+{
+    return response()->json($request->user());
 }
 
     public function refresh()

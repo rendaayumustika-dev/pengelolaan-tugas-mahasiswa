@@ -155,7 +155,6 @@ class TaskController extends Controller
             'data' => $query->orderBy('deadline')->get(),
         ]);
     }
-
     private function rules(bool $partial = false): array
     {
         $required = $partial ? 'sometimes' : 'required';
